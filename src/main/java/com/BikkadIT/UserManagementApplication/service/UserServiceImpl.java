@@ -1,14 +1,17 @@
 package com.BikkadIT.UserManagementApplication.service;
 
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.BikkadIT.UserManagementApplication.binding.LoginForm;
+import com.BikkadIT.UserManagementApplication.binding.UserForm;
 import com.BikkadIT.UserManagementApplication.entities.CityMasterEntity;
 import com.BikkadIT.UserManagementApplication.entities.CountryMasterEntity;
 import com.BikkadIT.UserManagementApplication.entities.StateMasterEntity;
@@ -17,6 +20,8 @@ import com.BikkadIT.UserManagementApplication.repositories.CityRepository;
 import com.BikkadIT.UserManagementApplication.repositories.CountryRepository;
 import com.BikkadIT.UserManagementApplication.repositories.StateRepository;
 import com.BikkadIT.UserManagementApplication.repositories.UserAccountRepository;
+
+import net.bytebuddy.utility.RandomString;
 
 @Service
 public class UserServiceImpl implements UserServiceI {
@@ -86,6 +91,31 @@ public class UserServiceImpl implements UserServiceI {
 		}
 
 		return cityMap;
+	}
+
+	@Override
+	public boolean saveUser(UserForm userForm) {
+
+		userForm.setAccStatus("LOCKED");
+		userForm.setPassword(generateRandomPassword());
+		UserAcccountEntity userAcccountEntity = new UserAcccountEntity();
+		BeanUtils.copyProperties(userForm, userAcccountEntity);
+
+		UserAcccountEntity save = userAccountRepository.save(userAcccountEntity);
+
+		if (save != null) {
+			// send mail
+			return true;
+		}
+		return false;
+	}
+
+	private String generateRandomPassword() {
+
+		String randomPassword = RandomStringUtils.randomAlphanumeric(6);
+
+		return randomPassword;
+
 	}
 
 }

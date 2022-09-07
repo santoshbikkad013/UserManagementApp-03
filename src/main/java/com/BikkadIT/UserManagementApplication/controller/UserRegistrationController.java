@@ -5,8 +5,11 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.BikkadIT.UserManagementApplication.binding.UserForm;
 import com.BikkadIT.UserManagementApplication.service.UserServiceI;
 
 @RestController
@@ -36,6 +39,19 @@ public class UserRegistrationController {
 
 		return cities;
 
+	}
+	
+	
+	@PostMapping("/saveUser")
+	public String saveUser(@RequestBody UserForm userForm) {
+	
+		boolean saveUser = userServiceI.saveUser(userForm);
+		
+		if(saveUser) {
+			return "User Saved Successfully.Check your mail for Unlock account";
+		}
+		return "User Not saved Successfully";
+		
 	}
 
 }

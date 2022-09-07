@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.BikkadIT.UserManagementApplication.binding.LoginForm;
+import com.BikkadIT.UserManagementApplication.binding.UserForm;
 import com.BikkadIT.UserManagementApplication.entities.CountryMasterEntity;
 
 public interface UserServiceI {
@@ -15,4 +16,6 @@ public interface UserServiceI {
 	public Map<Integer,String> getStates(Integer countryId);
 	
 	public Map<Integer,String> getCities(Integer stateId);
+	
+	public boolean  saveUser(UserForm userForm);
 }
