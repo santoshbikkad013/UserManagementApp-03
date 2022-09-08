@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.BikkadIT.UserManagementApplication.binding.LoginForm;
+import com.BikkadIT.UserManagementApplication.binding.UnlockAccountForm;
 import com.BikkadIT.UserManagementApplication.binding.UserForm;
 import com.BikkadIT.UserManagementApplication.entities.CityMasterEntity;
 import com.BikkadIT.UserManagementApplication.entities.CountryMasterEntity;
@@ -116,6 +117,36 @@ public class UserServiceImpl implements UserServiceI {
 
 		return randomPassword;
 
+	}
+
+	@Override
+	public boolean unlockeAccount(UnlockAccountForm unlockAccountForm) {
+		String email = unlockAccountForm.getEmail();
+		String tmpPwd = unlockAccountForm.getTempPwd();
+
+		UserAcccountEntity user = userAccountRepository.findByEmailAndPassword(email, tmpPwd);
+
+		if (user != null) {
+			user.setAccStatus("UNLOCKED");
+			user.setPassword(unlockAccountForm.getNewPwd());
+			userAccountRepository.save(user);
+			return true;
+
+		}
+
+		return false;
+	}
+
+	@Override
+	public String forgotPwd(String email) {
+		 UserAcccountEntity user = userAccountRepository.findByEmail(email);
+		 
+		 if(user !=null) {
+			 //send mail
+			 return "SUCCESS";
+		 }
+		
+		return "FAIL";
 	}
 
 }
