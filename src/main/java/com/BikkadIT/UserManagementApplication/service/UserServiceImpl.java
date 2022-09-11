@@ -22,6 +22,8 @@ import com.BikkadIT.UserManagementApplication.entities.CityMasterEntity;
 import com.BikkadIT.UserManagementApplication.entities.CountryMasterEntity;
 import com.BikkadIT.UserManagementApplication.entities.StateMasterEntity;
 import com.BikkadIT.UserManagementApplication.entities.UserAcccountEntity;
+import com.BikkadIT.UserManagementApplication.props.AppConstant;
+import com.BikkadIT.UserManagementApplication.props.AppProps;
 import com.BikkadIT.UserManagementApplication.repositories.CityRepository;
 import com.BikkadIT.UserManagementApplication.repositories.CountryRepository;
 import com.BikkadIT.UserManagementApplication.repositories.StateRepository;
@@ -47,22 +49,25 @@ public class UserServiceImpl implements UserServiceI {
 
 	@Autowired
 	private EmailUtils emailUtils;
-
+	
+	@Autowired
+	private AppProps appProps;
 	@Override
 	public String loginCheck(LoginForm loginForm) {
 		UserAcccountEntity userAcccountEntity = userAccountRepository.findByEmailAndPassword(loginForm.getEmail(),
 				loginForm.getPassword());
-
+Map<String,String> messages = appProps.getMessages();
+		  
 		if (userAcccountEntity != null) {
 			String accStatus = userAcccountEntity.getAccStatus();
-			if (accStatus.equals("LOCKED")) {
-				return "Your Account is locked";
+			if (accStatus.equals(AppConstant.LOCKED)) {
+				return messages.get(AppConstant.ACCOUNT_LOCKED);
 			} else {
-				return "Login successful. Welcome to Bikkad IT";
+				return messages.get(AppConstant.LOGIN_SUCCESS);
 			}
 
 		} else {
-			return "Creditional Are invalid";
+			return messages.get(AppConstant.INVALID_CREDITIONALS);
 		}
 
 	}
@@ -106,7 +111,7 @@ public class UserServiceImpl implements UserServiceI {
 	@Override
 	public boolean saveUser(UserForm userForm) {
 
-		userForm.setAccStatus("LOCKED");
+		userForm.setAccStatus(AppConstant.LOCKED);
 		userForm.setPassword(generateRandomPassword());
 		UserAcccountEntity userAcccountEntity = new UserAcccountEntity();
 		BeanUtils.copyProperties(userForm, userAcccountEntity);
@@ -124,8 +129,8 @@ public class UserServiceImpl implements UserServiceI {
 
 	private String getUserRegEmailBody(UserForm userForm) {
 
-		StringBuffer sb=new StringBuffer();
-		
+		StringBuffer sb = new StringBuffer();
+
 		String fileName = "UNLOCK-ACC-EMAIL-BODY-TEMPLETE.txt";
 
 		List<String> lines = new ArrayList();
@@ -153,7 +158,7 @@ public class UserServiceImpl implements UserServiceI {
 			}
 
 			sb.append(line);
-			
+
 		});
 
 		return sb.toString();
@@ -192,7 +197,7 @@ public class UserServiceImpl implements UserServiceI {
 
 		if (user != null) {
 			String subject = "Password is sent to your mail id.Check your mail";
-			String body = getForgotpassEmail();
+			String body = getForgotpassEmail(user);
 			emailUtils.sendMail(email, subject, body);
 			return "SUCCESS";
 		}
@@ -200,8 +205,42 @@ public class UserServiceImpl implements UserServiceI {
 		return "FAIL";
 	}
 
-	private String getForgotpassEmail() {
-		return null;
+	private String getForgotpassEmail(UserAcccountEntity userForm) {
+
+		StringBuffer sb = new StringBuffer();
+
+		String fileName = "RECOVER-PASS-EMAIL-BODY-TEMPLETE.txt";
+
+		List<String> lines = new ArrayList();
+
+		BufferedReader br;
+		try {
+			br = Files.newBufferedReader(Paths.get(fileName));
+			lines = br.lines().collect(Collectors.toList());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		lines.forEach(line -> {
+			if (line.contains("{FNAME}")) {
+				line = line.replace("{FNAME}", userForm.getFname());
+			}
+
+			if (line.contains("{LNAME}")) {
+				line = line.replace("{LNAME}", userForm.getLname());
+			}
+
+			if (line.contains("{TEMP-PWD}")) {
+				line = line.replace("{TEMP-PWD}", userForm.getPassword());
+			}
+
+			sb.append(line);
+
+		});
+
+		return sb.toString();
+		
 
 	}
 
