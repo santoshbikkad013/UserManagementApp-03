@@ -1,9 +1,14 @@
 package com.BikkadIT.UserManagementApplication.service;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.BeanUtils;
@@ -21,6 +26,7 @@ import com.BikkadIT.UserManagementApplication.repositories.CityRepository;
 import com.BikkadIT.UserManagementApplication.repositories.CountryRepository;
 import com.BikkadIT.UserManagementApplication.repositories.StateRepository;
 import com.BikkadIT.UserManagementApplication.repositories.UserAccountRepository;
+import com.BikkadIT.UserManagementApplication.util.EmailUtils;
 
 import net.bytebuddy.utility.RandomString;
 
@@ -38,6 +44,9 @@ public class UserServiceImpl implements UserServiceI {
 
 	@Autowired
 	private CityRepository cityRepository;
+
+	@Autowired
+	private EmailUtils emailUtils;
 
 	@Override
 	public String loginCheck(LoginForm loginForm) {
@@ -105,10 +114,50 @@ public class UserServiceImpl implements UserServiceI {
 		UserAcccountEntity save = userAccountRepository.save(userAcccountEntity);
 
 		if (save != null) {
-			// send mail
+			String Subject = "Please Check Your mail to unlock account";
+			String body = getUserRegEmailBody(userForm);
+			emailUtils.sendMail(userForm.getEmail(), Subject, body);
 			return true;
 		}
 		return false;
+	}
+
+	private String getUserRegEmailBody(UserForm userForm) {
+
+		StringBuffer sb=new StringBuffer();
+		
+		String fileName = "UNLOCK-ACC-EMAIL-BODY-TEMPLETE.txt";
+
+		List<String> lines = new ArrayList();
+
+		BufferedReader br;
+		try {
+			br = Files.newBufferedReader(Paths.get(fileName));
+			lines = br.lines().collect(Collectors.toList());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		lines.forEach(line -> {
+			if (line.contains("{FNAME}")) {
+				line = line.replace("{FNAME}", userForm.getFname());
+			}
+
+			if (line.contains("{LNAME}")) {
+				line = line.replace("{LNAME}", userForm.getLname());
+			}
+
+			if (line.contains("{TEMP-PWD}")) {
+				line = line.replace("{TEMP-PWD}", userForm.getPassword());
+			}
+
+			sb.append(line);
+			
+		});
+
+		return sb.toString();
+
 	}
 
 	private String generateRandomPassword() {
@@ -139,14 +188,21 @@ public class UserServiceImpl implements UserServiceI {
 
 	@Override
 	public String forgotPwd(String email) {
-		 UserAcccountEntity user = userAccountRepository.findByEmail(email);
-		 
-		 if(user !=null) {
-			 //send mail
-			 return "SUCCESS";
-		 }
-		
+		UserAcccountEntity user = userAccountRepository.findByEmail(email);
+
+		if (user != null) {
+			String subject = "Password is sent to your mail id.Check your mail";
+			String body = getForgotpassEmail();
+			emailUtils.sendMail(email, subject, body);
+			return "SUCCESS";
+		}
+
 		return "FAIL";
+	}
+
+	private String getForgotpassEmail() {
+		return null;
+
 	}
 
 }
